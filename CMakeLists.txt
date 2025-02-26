@@ -1,18 +1,6 @@
-﻿cmake_minimum_required(VERSION 3.5)
+﻿cmake_minimum_required(VERSION 3.21)
 
 project(hwinfo VERSION 1.0.0 LANGUAGES CXX)
-
-if (WIN32)
-    add_definitions(-DWIN32)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif()
-
-if(NOT HWINFO_CMAKE_BINARY_DIR)
-    set(HWINFO_CMAKE_BINARY_DIR ${CMAKE_BINARY_DIR})
-endif()
-
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${HWINFO_CMAKE_BINARY_DIR})
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${HWINFO_CMAKE_BINARY_DIR})
 
 # if standard not provided, use the latest supported by the compiler
 if("${CMAKE_CXX_STANDARD}" STREQUAL "")
@@ -31,57 +19,74 @@ endif()
 
 include(GNUInstallDirs)
 
-string(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}" PROJECT_IS_TOP_LEVEL)
+# Set output directories
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-option(HWINFO_SHARED "Shared build" ON)
-option(HWINFO_STATIC "Static build" OFF)
+# Define Build Options
+option(HWINFO_SHARED "Build as shared library" ON)
+option(HWINFO_STATIC "Build as static library" OFF)
 
+if(HWINFO_STATIC AND HWINFO_SHARED)
+    message(WARNING "Both HWINFO_STATIC and HWINFO_SHARED are enabled. Defaulting to SHARED.")
+    set(HWINFO_BUILD SHARED)
+elseif(HWINFO_STATIC)
+    set(HWINFO_BUILD STATIC)
+else()
+    set(HWINFO_BUILD SHARED)
+endif()
 
+# Enable Components
+option(HWINFO_OS "Enable OS information module" ON)
+option(HWINFO_MAINBOARD "Enable mainboard information module" ON)
+option(HWINFO_CPU "Enable CPU information module" ON)
+option(HWINFO_DISK "Enable disk information module" ON)
+option(HWINFO_RAM "Enable RAM information module" ON)
+option(HWINFO_GPU "Enable GPU information module" ON)
+option(HWINFO_GPU_OPENCL "Enable OpenCL support for GPU" OFF)
+option(HWINFO_BATTERY "Enable battery information module" ON)
+option(HWINFO_NETWORK "Enable network information module" ON)
+option(HWINFO_MONITOR "Enable monitor information module" ON)
+
+# Define Examples & Testing Options
 option(BUILD_EXAMPLES "Build example program" ${PROJECT_IS_TOP_LEVEL})
 option(BUILD_TESTING  "Build test program" ${PROJECT_IS_TOP_LEVEL})
 
-# Components
-option(HWINFO_OS "Enable OS information" ON)
-option(HWINFO_MAINBOARD "Enable mainboard information" ON)
-option(HWINFO_CPU "Enable CPU information" ON)
-option(HWINFO_DISK "Enable disk information" ON)
-option(HWINFO_RAM "Enable RAM information" ON)
-option(HWINFO_GPU "Enable GPU information" ON)
-option(HWINFO_GPU_OPENCL "Enable OpenCL for more GPU information" OFF)
-option(HWINFO_BATTERY "Enable battery information" ON)
-option(HWINFO_NETWORK "Enable network information" ON)
-
-if(NOT HWINFO_STATIC AND HWINFO_SHARED)
-  set(HWINFO_BUILD SHARED)
-else(HWINFO_STATIC)
-  set(HWINFO_BUILD STATIC)
+# Windows-specific settings
+if(WIN32)
+    add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${HWINFO_CMAKE_BINARY_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${HWINFO_CMAKE_BINARY_DIR}/lib)
-
-set(HWINFO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+# Include source directory
 add_subdirectory(src)
 
+# Configure CMake Package Config Files
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/lfreist-hwinfoConfigVersion.cmake"
         VERSION ${PROJECT_VERSION}
         COMPATIBILITY AnyNewerVersion
 )
+
 configure_file(cmake/lfreist-hwinfoConfig.cmake.in
         "${CMAKE_CURRENT_BINARY_DIR}/lfreist-hwinfoConfig.cmake"
         @ONLY
 )
-install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/lfreist-hwinfoConfig.cmake"
+
+# Install CMake package configuration
+install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/lfreist-hwinfoConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/lfreist-hwinfoConfigVersion.cmake"
-        DESTINATION lib/cmake/hwinfo
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/hwinfo
 )
-install(EXPORT lfreist-hwinfoTargets
+
+install(
+        EXPORT lfreist-hwinfoTargets
         FILE lfreist-hwinfoTargets.cmake
         NAMESPACE lfreist-hwinfo::
-        DESTINATION lib/cmake/hwinfo
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/hwinfo
 )
 
 if(BUILD_EXAMPLES OR BUILD_TESTING)
@@ -91,5 +96,5 @@ endif()
 if(BUILD_TESTING)
     include(CTest)
     add_subdirectory(test)
-    add_test(system_info system_info)
+    add_test(NAME system_info COMMAND system_info)
 endif()
