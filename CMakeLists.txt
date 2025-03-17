@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+﻿cmake_minimum_required(VERSION 3.5)
 
 project(hwinfo VERSION 1.0.0 LANGUAGES CXX)
 
@@ -45,6 +45,7 @@ option(HWINFO_RAM "Enable RAM information" ON)
 option(HWINFO_GPU "Enable GPU information" ON)
 option(HWINFO_GPU_OPENCL "Enable OpenCL for more GPU information" OFF)
 option(HWINFO_BATTERY "Enable battery information" ON)
+option(HWINFO_NETWORK "Enable network information" ON)
 
 if(NOT HWINFO_STATIC AND HWINFO_SHARED)
   set(HWINFO_BUILD SHARED)
