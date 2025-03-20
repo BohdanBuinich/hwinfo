@@ -71,6 +71,16 @@ CPU, RAM, GPU, Disks, Mainboard, ...
 |                  | Technology         |  ✔️   |  ❌️   |   ❌️    |
 |                  | Capacity           |  ✔️   |  ✔️   |   ❌️    |
 |                  | Charging           |  ✔️   |  ✔️   |   ❌️    |
+|     Network      | Description        |  ✔️   |  ❌️   |   ✔️    |
+|                  | Interface Index    |  ✔️   |  ❌️   |   ✔️    |
+|                  | MAC Address        |  ✔️   |  ❌️   |   ✔️    |
+|                  | IPv4 Address       |  ✔️   |  ❌️   |   ✔️    |
+|                  | IPv6 Address       |  ✔️   |  ❌️   |   ✔️    |
+|     Monitor      | Vendor             |  ✔️   |  ❌️   |   ✔️    |
+|                  | Model              |  ✔️   |  ✔️   |   ✔️    |
+|                  | Resolution         |  ✔️   |  ✔️   |   ✔️    |
+|                  | Refresh Rate       |  ✔️   |  ✔️   |   ✔️    |
+|                  | Serial Number      |  ✔️   |  ✔️   |   ✔️    |
 
 All components are available via the `hwinfo::hwinfo` target, or via individual CMake targets, which you can choose and
 link against depending on your needs.
@@ -91,7 +101,9 @@ target_link_libraries(
         hwinfo::mainboard
         hwinfo::disk
         hwinfo::os
-        hwinfo::battery)
+        hwinfo::battery
+        hwinfo::network
+        hwinfo::monitor)
 ```
 
 The CMake options control which components will be built and available in the library:
