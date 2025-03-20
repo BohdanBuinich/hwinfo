@@ -15,7 +15,6 @@
 #include <vector>
 
 namespace {
-
 // _____________________________________________________________________________________________________________________
 bool isPartition(const std::string& path) {
   static const std::regex partitionRegex(R"((sd[a-z]|nvme\d+n\d+)p?\d+$)");
@@ -45,11 +44,9 @@ std::string getMountPoint(const std::string& device) {
   }
   return "/";
 }
-
 }  // anonymous namespace
 
 namespace hwinfo {
-
 // _____________________________________________________________________________________________________________________
 std::string getDiskVendor(const std::string& path) {
   // nvme devices are in /sys/class/nvme/ and /sys/class/block/nvme*
@@ -93,7 +90,7 @@ int64_t getDiskSize_Bytes(const std::string& path) {
 
 // _____________________________________________________________________________________________________________________
 int64_t getDiskFreeSize_Bytes(const std::string& path) {
-  struct statvfs stat {};
+  struct statvfs stat{};
   if (statvfs(path.c_str(), &stat) == 0)
     return static_cast<int64_t>(stat.f_bsize) * static_cast<int64_t>(stat.f_bavail);
 
@@ -131,7 +128,6 @@ std::vector<Disk> getAllDisks() {
 
   return disks;
 }
-
 }  // namespace hwinfo
 
 #endif  // HWINFO_UNIX

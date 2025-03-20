@@ -11,7 +11,6 @@
 #include <vector>
 
 namespace hwinfo {
-
 #ifdef HWINFO_UNIX
 struct Jiffies {
   Jiffies() {
@@ -75,5 +74,4 @@ class HWINFO_API CPU {
 };
 
 std::vector<CPU> getAllCPUs();
-
 }  // namespace hwinfo
