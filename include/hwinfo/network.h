@@ -18,6 +18,7 @@ class HWINFO_API Network {
   HWI_NODISCARD const std::string& mac() const;
   HWI_NODISCARD const std::string& ip4() const;
   HWI_NODISCARD const std::string& ip6() const;
+  HWI_NODISCARD const std::string& type() const;
 
  private:
   Network() = default;
@@ -27,6 +28,7 @@ class HWINFO_API Network {
   std::string _mac;
   std::string _ip4;
   std::string _ip6;
+  std::string _type;
 };
 
 std::vector<Network> getAllNetworks();

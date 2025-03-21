@@ -71,8 +71,9 @@ CPU, RAM, GPU, Disks, Mainboard, ...
 |                  | Technology         |  ✔️   |  ❌️   |   ❌️    |
 |                  | Capacity           |  ✔️   |  ✔️   |   ❌️    |
 |                  | Charging           |  ✔️   |  ✔️   |   ❌️    |
-|     Network      | Description        |  ✔️   |  ❌️   |   ✔️    |
-|                  | Interface Index    |  ✔️   |  ❌️   |   ✔️    |
+|     Network      | Interface Index    |  ✔️   |  ❌️   |   ✔️    |
+|                  | Description        |  ✔️   |  ❌️   |   ✔️    |
+|                  | Type               |  ✔️   |  ❌️   |   ✔️    |
 |                  | MAC Address        |  ✔️   |  ❌️   |   ✔️    |
 |                  | IPv4 Address       |  ✔️   |  ❌️   |   ✔️    |
 |                  | IPv6 Address       |  ✔️   |  ❌️   |   ✔️    |
