@@ -30,6 +30,7 @@ struct Jiffies {
 
 class HWINFO_API CPU {
   friend std::vector<CPU> getAllCPUs();
+  friend void fillCoreCounts(std::vector<CPU>& cpus);
 
  public:
   ~CPU() = default;
@@ -61,6 +62,7 @@ class HWINFO_API CPU {
   int _id{-1};
   std::string _modelName;
   std::string _vendor;
+  int _processorIndex{-1};
   int _numPhysicalCores{-1};
   int _numLogicalCores{-1};
   int64_t _maxClockSpeed_MHz{-1};
