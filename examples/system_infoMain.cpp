@@ -199,10 +199,12 @@ int main(int argc, char** argv) {
             "{:<20} {}\n"
             "{:<20} {}\n"
             "{:<20} {}\n"
+            "{:<20} {}\n"
             "{:<20} {}\n",
             network_counter++,
-            "description:", network.description(),
             "interface index:", network.interfaceIndex(),
+            "description:", network.description(),
+            "interface type:", network.type(),
             "mac:", network.mac(),
             "ipv4:", network.ip4(),
             "ipv6:", network.ip6());

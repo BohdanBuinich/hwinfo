@@ -5,99 +5,214 @@
 #include <hwinfo/network.h>
 #include <ifaddrs.h>
 #include <net/if.h>
-#include <netpacket/packet.h>
-#include <sys/ioctl.h>
 
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <vector>
 
 namespace hwinfo {
 
-std::string getInterfaceIndex(const std::string& path) {
-  int index = if_nametoindex(path.c_str());
-  return (index > 0) ? std::to_string(index) : "<unknown>";
-}
+namespace {
+constexpr auto UNKNOWN = "<unknown>";
 
+/**
+ * @brief Get a user-friendly description of the interface.
+ *        Here it simply returns the interface name itself.
+ */
 std::string getDescription(const std::string& path) { return path; }
 
-std::string getMac(const std::string& path) {
-  std::ifstream file("/sys/class/net/" + path + "/address");
+/**
+ * @brief Returns the interface index as a string, or "<unknown>" if invalid.
+ */
+std::string getInterfaceIndex(const std::string& iface) {
+  unsigned int index = if_nametoindex(iface.c_str());
+  return (index > 0) ? std::to_string(index) : UNKNOWN;
+}
+
+/**
+ * @brief Reads MAC address from sysfs or returns "<unknown>" if unavailable.
+ */
+std::string getMac(const std::string& iface) {
+  const std::string path = "/sys/class/net/" + iface + "/address";
+  std::ifstream ifs(path);
+  if (!ifs) {
+    return UNKNOWN;
+  }
+
   std::string mac;
-  if (file.is_open()) {
-    std::getline(file, mac);
-    file.close();
-  }
-  return mac.empty() ? "<unknown>" : mac;
+  std::getline(ifs, mac);
+  return mac.empty() ? UNKNOWN : mac;
 }
 
-std::string getIp4(const std::string& interface) {
-  std::string ip4 = "<unknown>";
-  struct ifaddrs* ifaddr;
-  if (getifaddrs(&ifaddr) == -1) {
-    return ip4;
+/**
+ * @brief Generic IP address fetcher (IPv4 or IPv6).
+ * @param iface   Interface name (e.g., "eth0").
+ * @param family  Address family (AF_INET for IPv4, AF_INET6 for IPv6).
+ * @return The first matching IP address as a string, or "<unknown>" if not found.
+ */
+std::string getIp(const std::string& iface, int family) {
+  // Use RAII to ensure freeifaddrs is always called.
+  struct ifaddrs* rawAddrs = nullptr;
+  if (getifaddrs(&rawAddrs) == -1) {
+    return UNKNOWN;
   }
+  std::unique_ptr<struct ifaddrs, decltype(&freeifaddrs)> ifAddrs(rawAddrs, freeifaddrs);
 
-  for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
-    if (ifa->ifa_addr == nullptr) continue;
-    if (ifa->ifa_addr->sa_family == AF_INET && interface == ifa->ifa_name) {
-      char ip[INET_ADDRSTRLEN];
-      inet_ntop(AF_INET, &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr, ip, sizeof(ip));
-      ip4 = ip;
-      break;
-    }
-  }
-  freeifaddrs(ifaddr);
-  return ip4;
-}
-
-std::string getIp6(const std::string& interface) {
-  std::string ip6 = "<unknown>";
-  struct ifaddrs* ifaddr;
-  if (getifaddrs(&ifaddr) == -1) {
-    return ip6;
-  }
-
-  for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
-    if (ifa->ifa_addr == nullptr) {
+  for (auto* ifa = rawAddrs; ifa != nullptr; ifa = ifa->ifa_next) {
+    if (!ifa->ifa_addr || iface != ifa->ifa_name) {
       continue;
     }
-    if (ifa->ifa_addr->sa_family == AF_INET6 && interface == ifa->ifa_name) {
-      char ip[INET6_ADDRSTRLEN];
-      inet_ntop(AF_INET6, &((struct sockaddr_in6*)ifa->ifa_addr)->sin6_addr, ip, sizeof(ip));
-      if (std::strncmp(ip, "fe80", 4) == 0) {
-        ip6 = ip;
-        break;
+
+    if (ifa->ifa_addr->sa_family == family) {
+      char buffer[INET6_ADDRSTRLEN] = {0};
+
+      if (family == AF_INET) {
+        auto* addr = reinterpret_cast<struct sockaddr_in*>(ifa->ifa_addr);
+        if (inet_ntop(AF_INET, &addr->sin_addr, buffer, sizeof(buffer))) {
+          return buffer;
+        }
+      } else if (family == AF_INET6) {
+        auto* addr = reinterpret_cast<struct sockaddr_in6*>(ifa->ifa_addr);
+        if (inet_ntop(AF_INET6, &addr->sin6_addr, buffer, sizeof(buffer))) {
+          // Here we exemplify preferring link-local if found (fe80::).
+          // Adjust logic if you need the first global address, etc.
+          if (std::strncmp(buffer, "fe80", 4) == 0) {
+            return buffer;
+          }
+          // If you *only* want link-local, return immediately.
+          // Otherwise, you could store the address and keep searching
+          // in case you prefer global addresses. For now, we return
+          // upon finding link-local.
+        }
       }
     }
   }
-  freeifaddrs(ifaddr);
-  return ip6;
+
+  return UNKNOWN;
 }
 
+/**
+ * @brief Helper to retrieve the IPv4 address of an interface.
+ */
+std::string getIp4(const std::string& iface) { return getIp(iface, AF_INET); }
+
+/**
+ * @brief Helper to retrieve the IPv6 address of an interface.
+ */
+std::string getIp6(const std::string& iface) { return getIp(iface, AF_INET6); }
+
+/**
+ * @brief Attempts to determine the interface type:
+ *        - WiFi
+ *        - Loopback
+ *        - USB Ethernet
+ *        - Bridge
+ *        - TUN/TAP
+ *        - Ethernet
+ *        - <unknown> otherwise
+ */
+std::string getInterfaceType(const std::string& iface) {
+  const std::string sysPath = "/sys/class/net/" + iface;
+
+  // Check for Wi-Fi interface
+  if (std::filesystem::exists(sysPath + "/wireless")) {
+    return "WiFi";
+  }
+
+  // Check for Loopback
+  {
+    std::ifstream typeFile(sysPath + "/type");
+    int typeVal = 0;
+    if (typeFile.is_open()) {
+      typeFile >> typeVal;
+    }
+    if (typeVal == 772 || iface == "lo") {
+      return "Loopback";
+    }
+    // typeVal == 1 typically means Ethernet, but we check further below.
+  }
+
+  // Check for USB-based Ethernet via module path
+  {
+    std::error_code ec;
+    auto modulePath = std::filesystem::read_symlink(sysPath + "/device/driver/module", ec);
+    if (!ec && modulePath.string().find("usb") != std::string::npos) {
+      return "USB Ethernet";
+    }
+  }
+
+  // Check for USB-based via device symlink
+  {
+    std::error_code ec;
+    auto deviceLink = std::filesystem::read_symlink(sysPath + "/device", ec);
+    if (!ec && deviceLink.string().find("usb") != std::string::npos) {
+      return "USB Ethernet";
+    }
+  }
+
+  // Check for Bridge Interface
+  if (std::filesystem::exists(sysPath + "/bridge")) {
+    return "Bridge";
+  }
+
+  // Check for TUN/TAP
+  if (std::filesystem::exists(sysPath + "/tun_flags")) {
+    return "TUN/TAP";
+  }
+
+  // If none of the above checks matched, try reading "type" again:
+  {
+    std::ifstream typeFile(sysPath + "/type");
+    int typeVal = 0;
+    if (typeFile.is_open()) {
+      typeFile >> typeVal;
+    }
+    // 1 often represents a standard Ethernet interface.
+    if (typeVal == 1) {
+      return "Ethernet";
+    }
+  }
+
+  return UNKNOWN;
+}
+
+}  // namespace
+
+/**
+ * @brief Collect all network interfaces with their info (index, MAC, IP, etc.).
+ */
 std::vector<Network> getAllNetworks() {
   std::vector<Network> networks;
-  struct ifaddrs* ifaddr;
-  if (getifaddrs(&ifaddr) == -1) {
+
+  // Use RAII to ensure freeifaddrs is always called.
+  ifaddrs* rawAddrs = nullptr;
+  if (getifaddrs(&rawAddrs) == -1) {
     perror("getifaddrs");
     return networks;
   }
+  std::unique_ptr<struct ifaddrs, decltype(&freeifaddrs)> ifAddrs(rawAddrs, freeifaddrs);
 
-  for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
-    if (ifa->ifa_addr == nullptr) continue;
-    if (ifa->ifa_addr->sa_family != AF_PACKET) continue;
+  // Loop over all interfaces
+  for (auto* ifa = rawAddrs; ifa != nullptr; ifa = ifa->ifa_next) {
+    // We only care about AF_PACKET for physical interfaces (MAC-based).
+    if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_PACKET) {
+      continue;
+    }
 
-    std::string interface = ifa->ifa_name;
+    const std::string interfaceName = ifa->ifa_name;
     Network network;
-    network._index = getInterfaceIndex(interface);
-    network._description = getDescription(interface);
-    network._mac = getMac(interface);
-    network._ip4 = getIp4(interface);
-    network._ip6 = getIp6(interface);
+    network._index = getInterfaceIndex(interfaceName);
+    network._description = getDescription(interfaceName);
+    network._mac = getMac(interfaceName);
+    network._ip4 = getIp4(interfaceName);
+    network._ip6 = getIp6(interfaceName);
+    network._type = getInterfaceType(interfaceName);
+
     networks.push_back(std::move(network));
   }
-  freeifaddrs(ifaddr);
+
   return networks;
 }
 
