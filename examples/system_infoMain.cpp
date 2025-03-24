@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
     int network_counter = 0;
     for (const auto& network : networks) {
       // clang-format off
-      if (network.ip4().size() > 0 || network.ip6().size() > 0) {
+      if (!network.ip4().empty() || !network.ip6().empty()) {
         fmt::print(
             "Network {}:\n"
             "{:<20} {}\n"
@@ -212,5 +212,31 @@ int main(int argc, char** argv) {
   } else {
     fmt::print("No Networks installed or detected\n");
   }
+
+  const auto monitors = hwinfo::getAllMonitors();
+  fmt::print("--------------------------------- Monitors -----------------------------------\n");
+
+  if (!monitors.empty()) {
+    int monitor_counter = 0;
+    for (const auto& monitor : monitors) {
+      // clang-format off
+      fmt::print("Monitor {}:\n"
+                 "{:<20} {}\n"
+                 "{:<20} {}\n"
+                 "{:<20} {}\n"
+                 "{:<20} {} Hz\n"
+                 "{:<20} {}\n",
+                 monitor_counter++,
+                 "vendor:", monitor.vendor(),
+                 "model:", monitor.model(),
+                 "resolution:", monitor.resolution(),
+                 "refresh rate:", monitor.refreshRate(),
+                 "serial-number:", monitor.serialNumber());
+      // clang-format on
+    }
+  } else {
+    fmt::print("No Monitors detected\n");
+  }
+
   return EXIT_SUCCESS;
 }

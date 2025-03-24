@@ -72,6 +72,7 @@ option(HWINFO_GPU        "Enable GPU information module"           ON)
 option(HWINFO_GPU_OPENCL "Enable OpenCL support for GPU module"    OFF)
 option(HWINFO_BATTERY    "Enable battery information module"       ON)
 option(HWINFO_NETWORK    "Enable network information module"       ON)
+option(HWINFO_MONITOR    "Enable monitor information module"       ON)
 
 # ----------------------------------------------------------------------------
 # Examples & Testing

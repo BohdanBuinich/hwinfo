@@ -67,7 +67,8 @@ build_and_test_target "Debug" "hwinfo_os" \
     -DHWINFO_GPU=OFF \
     -DHWINFO_GPU_OPENCL=OFF \
     -DHWINFO_BATTERY=OFF \
-    -DHWINFO_NETWORK=OFF
+    -DHWINFO_NETWORK=OFF \
+    -DHWINFO_MONITOR=OFF
 
 #--------------------------------------------------------------------------
 # 3) Test mainboard target
@@ -81,7 +82,8 @@ build_and_test_target "Debug" "hwinfo_mainboard" \
     -DHWINFO_GPU=OFF \
     -DHWINFO_GPU_OPENCL=OFF \
     -DHWINFO_BATTERY=OFF \
-    -DHWINFO_NETWORK=OFF
+    -DHWINFO_NETWORK=OFF \
+    -DHWINFO_MONITOR=OFF
 
 #--------------------------------------------------------------------------
 # 4) Test CPU target
@@ -95,7 +97,8 @@ build_and_test_target "Debug" "hwinfo_cpu" \
     -DHWINFO_GPU=OFF \
     -DHWINFO_GPU_OPENCL=OFF \
     -DHWINFO_BATTERY=OFF \
-    -DHWINFO_NETWORK=OFF
+    -DHWINFO_NETWORK=OFF \
+    -DHWINFO_MONITOR=OFF
 
 #--------------------------------------------------------------------------
 # 5) Test disk target
@@ -109,7 +112,8 @@ build_and_test_target "Debug" "hwinfo_disk" \
     -DHWINFO_GPU=OFF \
     -DHWINFO_GPU_OPENCL=OFF \
     -DHWINFO_BATTERY=OFF \
-    -DHWINFO_NETWORK=OFF
+    -DHWINFO_NETWORK=OFF \
+    -DHWINFO_MONITOR=OFF
 
 #--------------------------------------------------------------------------
 # 6) Test RAM target
@@ -123,7 +127,8 @@ build_and_test_target "Debug" "hwinfo_ram" \
     -DHWINFO_GPU=OFF \
     -DHWINFO_GPU_OPENCL=OFF \
     -DHWINFO_BATTERY=OFF \
-    -DHWINFO_NETWORK=OFF
+    -DHWINFO_NETWORK=OFF \
+    -DHWINFO_MONITOR=OFF
 
 #--------------------------------------------------------------------------
 # 7) Test GPU target
@@ -137,7 +142,8 @@ build_and_test_target "Debug" "hwinfo_gpu" \
     -DHWINFO_GPU=ON \
     -DHWINFO_GPU_OPENCL=OFF \
     -DHWINFO_BATTERY=OFF \
-    -DHWINFO_NETWORK=OFF
+    -DHWINFO_NETWORK=OFF \
+    -DHWINFO_MONITOR=OFF
 
 ## Uncomment to Test GPU target with OpenCL
 # build_and_test_target "Debug" "hwinfo_gpu" \
@@ -149,7 +155,9 @@ build_and_test_target "Debug" "hwinfo_gpu" \
 #     -DHWINFO_GPU=ON \
 #     -DHWINFO_GPU_OPENCL=ON \
 #     -DHWINFO_BATTERY=OFF \
-#     -DHWINFO_NETWORK=OFF
+#     -DHWINFO_NETWORK=OFF \
+#     -DHWINFO_MONITOR=OFF
+
 #--------------------------------------------------------------------------
 # 8) Test battery target
 #--------------------------------------------------------------------------
@@ -162,7 +170,23 @@ build_and_test_target "Debug" "hwinfo_battery" \
     -DHWINFO_GPU=OFF \
     -DHWINFO_GPU_OPENCL=OFF \
     -DHWINFO_BATTERY=ON \
-    -DHWINFO_NETWORK=OFF
+    -DHWINFO_NETWORK=OFF \
+    -DHWINFO_MONITOR=OFF
+
+#--------------------------------------------------------------------------
+# 9) Test monitor target
+#--------------------------------------------------------------------------
+build_and_test_target "Debug" "hwinfo_monitor" \
+    -DHWINFO_OS=OFF \
+    -DHWINFO_MAINBOARD=OFF \
+    -DHWINFO_CPU=OFF \
+    -DHWINFO_DISK=OFF \
+    -DHWINFO_RAM=OFF \
+    -DHWINFO_GPU=OFF \
+    -DHWINFO_GPU_OPENCL=OFF \
+    -DHWINFO_BATTERY=OFF \
+    -DHWINFO_NETWORK=OFF \
+    -DHWINFO_MONITOR=ON
 
 #--------------------------------------------------------------------------
 # Finally, clean up

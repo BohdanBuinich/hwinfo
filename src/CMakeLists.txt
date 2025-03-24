@@ -253,6 +253,32 @@ if (HWINFO_NETWORK)
     )
 endif()
 
+if (HWINFO_MONITOR)
+    set(MONITOR_SOURCES
+            monitor.cpp
+            apple/monitor.cpp
+            linux/monitor.cpp
+            windows/monitor.cpp
+    )
+
+    set(MONITOR_LINK_LIBS "")
+    set(MONITOR_INCLUDE_DIRS "")
+
+    if (APPLE)
+        list(APPEND MONITOR_LINK_LIBS
+                "-framework IOKit"
+                "-framework CoreFoundation"
+                "-framework CoreGraphics"
+        )
+    endif()
+
+    add_hwinfo_component(monitor
+            SOURCES     ${MONITOR_SOURCES}
+            LINK_LIBS   ${MONITOR_LINK_LIBS}
+            INCLUDE_DIRS ${MONITOR_INCLUDE_DIRS}
+    )
+endif()
+
 # === Install Headers & Interface Library =============================================================================
 
 install(FILES

@@ -71,6 +71,16 @@ CPU, RAM, GPU, Disks, Mainboard, ...
 |                  | Technology         |  ✔️   |  ❌️   |   ❌️    |
 |                  | Capacity           |  ✔️   |  ✔️   |   ❌️    |
 |                  | Charging           |  ✔️   |  ✔️   |   ❌️    |
+|     Network      | Description        |  ✔️   |  ❌️   |   ✔️    |
+|                  | Interface Index    |  ✔️   |  ❌️   |   ✔️    |
+|                  | MAC Address        |  ✔️   |  ❌️   |   ✔️    |
+|                  | IPv4 Address       |  ✔️   |  ❌️   |   ✔️    |
+|                  | IPv6 Address       |  ✔️   |  ❌️   |   ✔️    |
+|     Monitor      | Vendor             |  ✔️   |  ❌️   |   ✔️    |
+|                  | Model              |  ✔️   |  ✔️   |   ✔️    |
+|                  | Resolution         |  ✔️   |  ✔️   |   ✔️    |
+|                  | Refresh Rate       |  ✔️   |  ✔️   |   ✔️    |
+|                  | Serial Number      |  ✔️   |  ✔️   |   ✔️    |
 
 All components are available via the `hwinfo::hwinfo` target, or via individual CMake targets, which you can choose and
 link against depending on your needs.
@@ -91,7 +101,9 @@ target_link_libraries(
         lfreist-hwinfo::hwinfo_mainboard
         lfreist-hwinfo::hwinfo_disk
         lfreist-hwinfo::hwinfo_os
-        lfreist-hwinfo::hwinfo_battery)
+        lfreist-hwinfo::hwinfo_battery
+        lfreist-hwinfo::hwinfo_network
+        lfreist-hwinfo::hwinfo_monitor)
 ```
 
 The CMake options control which components will be built and available in the library:
@@ -104,6 +116,8 @@ The CMake options control which components will be built and available in the li
 - `HWINFO_GPU` "Enable GPU detection" (default to `ON`)
 - `HWINFO_GPU_OPENCL` "Enable usage of OpenCL in GPU information" (default to `OFF`)
 - `HWINFO_BATTERY` "Enable battery detection" (default to `ON`)
+- `HWINFO_NETWORK` "Enable network information module" (default to `ON`)
+- `HWINFO_MONITOR` "Enable monitor detection" (default to `ON`)
 
 ## Build `hwinfo`
 
