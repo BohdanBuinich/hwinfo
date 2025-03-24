@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "hwinfo/battery.h"
+#include "hwinfo/utils/constants.h"
 
 namespace hwinfo {
 
@@ -45,16 +46,16 @@ CFDictionaryRef getPowerSource(const int id) {
 }
 
 // _____________________________________________________________________________________________________________________
-std::string Battery::getVendor() const { return "<unknown>"; }
+std::string Battery::getVendor() const { return constants::UNKNOWN; }
 
 // _____________________________________________________________________________________________________________________
-std::string Battery::getModel() const { return "<unknown>"; }
+std::string Battery::getModel() const { return constants::UNKNOWN; }
 
 // _____________________________________________________________________________________________________________________
 std::string Battery::getSerialNumber() const {
   const CFDictionaryRef powerSource = getPowerSource(_id);
   if (!powerSource) {
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
 
   // this key is recommended. it may be empty
@@ -63,7 +64,7 @@ std::string Battery::getSerialNumber() const {
 
   if (!serialNumber) {
     CFRelease(powerSource);
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
 
   char serialNumberStr[256];
@@ -75,7 +76,7 @@ std::string Battery::getSerialNumber() const {
 }
 
 // _____________________________________________________________________________________________________________________
-std::string Battery::getTechnology() const { return "<unknown>"; }
+std::string Battery::getTechnology() const { return constants::UNKNOWN; }
 
 // _____________________________________________________________________________________________________________________
 uint32_t Battery::getEnergyFull() const {
@@ -120,7 +121,7 @@ uint32_t Battery::energyNow() const {
 bool Battery::charging() const {
   const CFDictionaryRef powerSource = getPowerSource(_id);
   if (!powerSource) {
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
 
   const auto isCharging = static_cast<CFBooleanRef>(CFDictionaryGetValue(powerSource, CFSTR(kIOPSIsChargingKey)));

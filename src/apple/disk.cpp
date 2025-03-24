@@ -1,22 +1,22 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include <hwinfo/platform.h>
-
-#include <cstdint>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_APPLE
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOBSD.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/storage/IOMedia.h>
-#include <hwinfo/disk.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
+
+#include "hwinfo/disk.h"
+#include "hwinfo/utils/constants.h"
 
 namespace hwinfo {
 
@@ -28,7 +28,7 @@ static const mach_port_t hc_IOMasterPortDefault = 0;
  */
 std::string cf_to_std(CFStringRef cfString) {
   if (cfString == nullptr) {
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
 
   CFIndex length = CFStringGetLength(cfString);
@@ -41,7 +41,7 @@ std::string cf_to_std(CFStringRef cfString) {
   auto success = CFStringGetCString(cfString, const_cast<char*>(out.data()), maxSize, kCFStringEncodingUTF8);
 
   if (!success) {
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
 
   // Resize the string to the actual length
@@ -208,7 +208,7 @@ std::vector<Disk> getAllDisks() {
       // Get disk name
       char model[128];
       if (IORegistryEntryGetName(service, model) != KERN_SUCCESS) {
-        disk._model = "<unknown>";
+        disk._model = constants::UNKNOWN;
       } else {
         disk._model = model;
       }
@@ -217,7 +217,7 @@ std::vector<Disk> getAllDisks() {
       if (disk._model.find("APPLE") != std::string::npos || disk._model.find("Apple") != std::string::npos) {
         disk._vendor = "Apple";
       } else {
-        disk._vendor = "<unknown>";
+        disk._vendor = constants::UNKNOWN;
       }
 
       disk._serialNumber = getIORegistryProperty<std::string, CFStringRef>(service, CFSTR(kIOMediaUUIDKey));

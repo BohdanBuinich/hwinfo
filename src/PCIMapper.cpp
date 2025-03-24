@@ -5,14 +5,14 @@
  * This file is part of hwinfo.
  */
 
-#include <hwinfo/utils/PCIMapper.h>
+#include "hwinfo/utils/PCIMapper.h"
 
 #ifdef HWINFO_UNIX
 
-#include <hwinfo/utils/pci.ids.h>
-#include <hwinfo/utils/stringutils.h>
-
 #include <sstream>
+
+#include "hwinfo/utils/pci.ids.h"
+#include "hwinfo/utils/stringutils.h"
 
 namespace hwinfo {
 

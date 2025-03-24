@@ -1,14 +1,16 @@
-#include <hwinfo/platform.h>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_APPLE
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/graphics/IOGraphicsLib.h>
-#include <hwinfo/monitor.h>
 
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include "hwinfo/monitor.h"
+#include "hwinfo/utils/constants.h"
 
 namespace hwinfo {
 
@@ -30,15 +32,15 @@ std::vector<Monitor> getAllMonitors() {
   for (auto displayID : displays) {
     // Get Vendor ID
     // uint32_t vendorID = CGDisplayVendorNumber(displayID);
-    // std::string vendor = (vendorID == 0) ? "<unknown>" : std::to_string(vendorID);
+    // std::string vendor = (vendorID == 0) ? constants::UNKNOWN : std::to_string(vendorID);
 
     // Get Model ID
     uint32_t modelID = CGDisplayModelNumber(displayID);
-    std::string model = (modelID == 0) ? "<unknown>" : std::to_string(modelID);
+    std::string model = (modelID == 0) ? constants::UNKNOWN : std::to_string(modelID);
 
     // Get Serial Number
     uint32_t serial = CGDisplaySerialNumber(displayID);
-    std::string serialNumber = (serial == 0) ? "<unknown>" : std::to_string(serial);
+    std::string serialNumber = (serial == 0) ? constants::UNKNOWN : std::to_string(serial);
 
     // Get Resolution
     CGDisplayModeRef mode = CGDisplayCopyDisplayMode(displayID);
@@ -48,14 +50,14 @@ std::vector<Monitor> getAllMonitors() {
 
     // Get Refresh Rate
     uint32_t refreshRateValue = std::round(CGDisplayModeGetRefreshRate(mode));
-    std::string refreshRate = (refreshRateValue > 0) ? std::to_string(refreshRateValue) : "<unknown>";
+    std::string refreshRate = (refreshRateValue > 0) ? std::to_string(refreshRateValue) : constants::UNKNOWN;
 
     // Clean up
     if (mode) {
       CGDisplayModeRelease(mode);
     }
 
-    monitors.emplace_back("<unknown>", model, resolution, refreshRate, serialNumber);
+    monitors.emplace_back(constants::UNKNOWN, model, resolution, refreshRate, serialNumber);
   }
 
   return monitors;

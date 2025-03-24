@@ -5,10 +5,12 @@
 
 #ifdef HWINFO_APPLE
 
-#include <hwinfo/ram.h>
 #include <sys/sysctl.h>
 
 #include <string>
+
+#include "hwinfo/ram.h"
+#include "hwinfo/utils/constants.h"
 
 namespace hwinfo {
 
@@ -28,10 +30,10 @@ int64_t getMemSize() {
 Memory::Memory() {
   // TODO: get information for actual memory modules (DIMM)
   Module module;
-  module.vendor = "<unknown>";
-  module.name = "<unknown>";
-  module.serial_number = "<unknown>";
-  module.model = "<unknown>";
+  module.vendor = constants::UNKNOWN;
+  module.name = constants::UNKNOWN;
+  module.serial_number = constants::UNKNOWN;
+  module.model = constants::UNKNOWN;
   module.id = 0;
   module.total_Bytes = getMemSize();
   module.frequency_Hz = -1;

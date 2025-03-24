@@ -1,10 +1,8 @@
-#include <hwinfo/platform.h>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_UNIX
 
 #include <dirent.h>
-#include <hwinfo/cpu.h>
-#include <hwinfo/utils/filesystem.h>
 #include <sys/stat.h>
 
 #include <cstring>
@@ -14,6 +12,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "hwinfo/cpu.h"
+#include "hwinfo/utils/filesystem.h"
 
 namespace hwinfo {
 namespace filesystem {

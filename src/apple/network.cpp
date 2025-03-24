@@ -1,9 +1,10 @@
-#include <hwinfo/platform.h>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_APPLE
-#include <hwinfo/network.h>
-
 #include <vector>
+
+#include "hwinfo/network.h"
+
 namespace hwinfo {
 std::vector<Network> getAllNetworks() {
   std::vector<Network> networks;

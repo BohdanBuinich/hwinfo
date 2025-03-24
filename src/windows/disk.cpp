@@ -5,14 +5,14 @@
 
 #ifdef HWINFO_WINDOWS
 
-#include <hwinfo/disk.h>
-#include <hwinfo/utils/stringutils.h>
-#include <hwinfo/utils/wmi_wrapper.h>
-
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include "hwinfo/disk.h"
+#include "hwinfo/utils/stringutils.h"
+#include "hwinfo/utils/wmi_wrapper.h"
 
 namespace hwinfo {
 

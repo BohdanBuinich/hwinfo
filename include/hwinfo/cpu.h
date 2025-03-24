@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <hwinfo/platform.h>
-#include <hwinfo/utils/wmi_wrapper.h>
-
 #include <cstdint>
 #include <string>
 #include <vector>
+
+#include "hwinfo/platform.h"
+#include "hwinfo/utils/wmi_wrapper.h"
 
 namespace hwinfo {
 #ifdef HWINFO_UNIX

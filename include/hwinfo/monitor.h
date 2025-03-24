@@ -1,9 +1,10 @@
 #pragma once
 
-#include <hwinfo/platform.h>
-
 #include <string>
 #include <vector>
+
+#include "hwinfo/platform.h"
+#include "hwinfo/utils/constants.h"
 
 namespace hwinfo {
 
@@ -26,11 +27,11 @@ class HWINFO_API Monitor {
   HWI_NODISCARD const std::string& serialNumber() const;
 
  private:
-  std::string _vendor{"Unknown"};
-  std::string _model{"Unknown"};
-  std::string _resolution{"Unknown"};
-  std::string _refreshRate{"Unknown"};
-  std::string _serialNumber{"Unknown"};
+  std::string _vendor{constants::UNKNOWN};
+  std::string _model{constants::UNKNOWN};
+  std::string _resolution{constants::UNKNOWN};
+  std::string _refreshRate{constants::UNKNOWN};
+  std::string _serialNumber{constants::UNKNOWN};
 };
 
 std::vector<Monitor> getAllMonitors();

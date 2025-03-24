@@ -1,7 +1,7 @@
 // Copyright (c) Leon Freist <freist@informatik.uni-freiburg.de>
 // This software is part of HWBenchmark
 
-#include <hwinfo/cpu.h>
+#include "hwinfo/cpu.h"
 
 #include <string>
 #include <vector>

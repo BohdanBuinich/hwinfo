@@ -5,13 +5,15 @@
 
 #ifdef HWINFO_UNIX
 
-#include <hwinfo/ram.h>
-#include <hwinfo/utils/stringutils.h>
 #include <unistd.h>
 
 #include <fstream>
 #include <string>
 #include <vector>
+
+#include "hwinfo/ram.h"
+#include "hwinfo/utils/constants.h"
+#include "hwinfo/utils/stringutils.h"
 
 namespace hwinfo {
 
@@ -77,10 +79,10 @@ MemInfo parse_meminfo() {
 Memory::Memory() {
   // TODO: get information for actual memory modules (DIMM)
   Module module;
-  module.vendor = "<unknown>";
-  module.name = "<unknown>";
-  module.serial_number = "<unknown>";
-  module.model = "<unknown>";
+  module.vendor = constants::UNKNOWN;
+  module.name = constants::UNKNOWN;
+  module.serial_number = constants::UNKNOWN;
+  module.model = constants::UNKNOWN;
   module.id = 0;
   module.total_Bytes = parse_meminfo().total;
   module.frequency_Hz = -1;

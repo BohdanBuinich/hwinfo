@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <hwinfo/platform.h>
-
 #include <cstdint>
 #include <string>
 #include <vector>
+
+#include "hwinfo/platform.h"
 
 namespace hwinfo {
 // Linux always considers sectors to be 512 bytes long independently of the devices real block size.

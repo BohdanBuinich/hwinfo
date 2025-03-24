@@ -1,9 +1,9 @@
 #pragma once
 
-#include <hwinfo/platform.h>
-
 #include <string>
 #include <vector>
+
+#include "hwinfo/platform.h"
 
 namespace hwinfo {
 

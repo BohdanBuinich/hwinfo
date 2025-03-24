@@ -1,4 +1,4 @@
-#include <hwinfo/network.h>
+#include "hwinfo/network.h"
 
 namespace hwinfo {
 

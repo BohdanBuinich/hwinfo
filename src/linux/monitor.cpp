@@ -1,9 +1,8 @@
-#include <hwinfo/platform.h>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_UNIX
 #include <dirent.h>
 #include <fcntl.h>
-#include <hwinfo/monitor.h>
 #include <unistd.h>
 #include <xf86drmMode.h>
 
@@ -14,6 +13,9 @@
 #include <regex>
 #include <string>
 #include <vector>
+
+#include "hwinfo/monitor.h"
+#include "hwinfo/utils/constants.h"
 
 constexpr auto EDID_LENGTH = 128;
 
@@ -60,7 +62,7 @@ std::optional<std::vector<uint8_t>> readEDID(const std::string& path) {
 
 // Extract Vendor from EDID
 std::string getVendorFromEDID(const std::vector<uint8_t>& edid) {
-  if (edid.size() < EDID_LENGTH) return "<unknown>";
+  if (edid.size() < EDID_LENGTH) return hwinfo::constants::UNKNOWN;
 
   return {static_cast<char>(((edid[8] >> 2) & 0x1F) + 'A' - 1),
           static_cast<char>(((edid[8] & 0x03) << 3 | (edid[9] >> 5)) + 'A' - 1),
@@ -69,7 +71,7 @@ std::string getVendorFromEDID(const std::vector<uint8_t>& edid) {
 
 // Extract Model & Serial from EDID
 std::pair<std::string, std::string> getModelAndSerialFromEDID(const std::vector<uint8_t>& edid) {
-  if (edid.size() < EDID_LENGTH) return {"<unknown>", "<unknown>"};
+  if (edid.size() < EDID_LENGTH) return {hwinfo::constants::UNKNOWN, hwinfo::constants::UNKNOWN};
 
   std::string model = std::to_string((edid[11] << 8) | edid[10]);
   std::string serialNumber = std::to_string(edid[12] | (edid[13] << 8) | (edid[14] << 16) | (edid[15] << 24));
@@ -79,7 +81,7 @@ std::pair<std::string, std::string> getModelAndSerialFromEDID(const std::vector<
 
 std::pair<std::string, std::string> getResolutionAndRefreshRateFromEDID(const std::vector<uint8_t>& edid) {
   if (edid.size() < EDID_LENGTH) {
-    return {"<unknown>", "<unknown>"};
+    return {hwinfo::constants::UNKNOWN, hwinfo::constants::UNKNOWN};
   }
 
   // Read Active Pixels
@@ -87,7 +89,7 @@ std::pair<std::string, std::string> getResolutionAndRefreshRateFromEDID(const st
   const auto v_active = static_cast<uint16_t>(edid[59] | ((edid[61] & 0xF0) << 4));
 
   if (h_active == 0 || v_active == 0) {
-    return {"<unknown>", "<unknown>"};
+    return {hwinfo::constants::UNKNOWN, hwinfo::constants::UNKNOWN};
   }
 
   // Generate Resolution String
@@ -102,7 +104,7 @@ std::pair<std::string, std::string> getResolutionAndRefreshRateFromEDID(const st
 
   // Check if pixel clock is valid
   if (pixel_clock == 0) {
-    return {resolution, "<unknown>"};
+    return {resolution, hwinfo::constants::UNKNOWN};
   }
 
   // Calculate Refresh Rate (in Hz)
@@ -148,7 +150,7 @@ std::string getConnectorTypeName(uint32_t type) {
     case DRM_MODE_CONNECTOR_DSI:
       return "DSI";
     default:
-      return "<unknown>";
+      return hwinfo::constants::UNKNOWN;
   }
 }
 
@@ -185,20 +187,20 @@ std::vector<Monitor> getAllMonitors() {
         std::string edid_path = "/sys/class/drm/" + connector_name + "/edid";
         auto edidData = drm_util::readEDID(edid_path);
 
-        std::string vendor = edidData ? drm_util::getVendorFromEDID(*edidData) : "<unknown>";
-        auto [model, serialNumber] =
-            edidData ? drm_util::getModelAndSerialFromEDID(*edidData) : std::make_pair("<unknown>", "<unknown>");
+        std::string vendor = edidData ? drm_util::getVendorFromEDID(*edidData) : constants::UNKNOWN;
+        auto [model, serialNumber] = edidData ? drm_util::getModelAndSerialFromEDID(*edidData)
+                                              : std::make_pair(constants::UNKNOWN, constants::UNKNOWN);
 
         auto [drmResolution, drmRefreshRate] = drm_util::getResolutionAndRefreshRateFromEDID(*edidData);
 
         // Determine resolution
-        std::string resolution = (drmResolution == "<unknown>") ? std::to_string(conn->modes[0].hdisplay) + "x" +
-                                                                      std::to_string(conn->modes[0].vdisplay)
-                                                                : drmResolution;
+        std::string resolution = (drmResolution == constants::UNKNOWN) ? std::to_string(conn->modes[0].hdisplay) + "x" +
+                                                                             std::to_string(conn->modes[0].vdisplay)
+                                                                       : drmResolution;
 
         // Determine refresh rate
         std::string refreshRate =
-            (drmRefreshRate == "<unknown>") ? std::to_string(conn->modes[0].vrefresh) : drmRefreshRate;
+            (drmRefreshRate == constants::UNKNOWN) ? std::to_string(conn->modes[0].vrefresh) : drmRefreshRate;
 
         monitors.emplace_back(vendor, model, resolution, refreshRate, serialNumber);
       }

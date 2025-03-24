@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "hwinfo/utils/constants.h"
+
 namespace utils {
 
 template <typename T>
@@ -15,7 +17,7 @@ T get_value(const std::vector<T>& data, size_t index);
 template <>
 inline std::string get_value<std::string>(const std::vector<std::string>& data, size_t index) {
   if (data.size() < index) {
-    return "<unknown>";
+    return hwinfo::constants::UNKNOWN;
   } else {
     return data[index];
   }

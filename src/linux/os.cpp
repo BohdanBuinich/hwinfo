@@ -12,6 +12,7 @@
 #include <string>
 
 #include "hwinfo/os.h"
+#include "hwinfo/utils/constants.h"
 #include "hwinfo/utils/stringutils.h"
 
 namespace hwinfo {
@@ -23,7 +24,7 @@ OS::OS() {
     std::ifstream stream("/etc/os-release");
     if (!stream) {
       _name = "Linux";
-      _version = "<unknown>";
+      _version = constants::UNKNOWN;
     }
     while (std::getline(stream, line)) {
       if (utils::starts_with(line, "PRETTY_NAME")) {
@@ -44,7 +45,7 @@ OS::OS() {
     if (uname(&info) == 0) {
       _kernel = info.release;
     } else {
-      _kernel = "<unknown>";
+      _kernel = constants::UNKNOWN;
     }
   }
   {  // architecture
