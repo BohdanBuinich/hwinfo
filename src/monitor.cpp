@@ -1,4 +1,4 @@
-#include <hwinfo/monitor.h>
+#include "hwinfo/monitor.h"
 
 namespace hwinfo {
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <hwinfo/cpu.h>
-
 #include <string>
 #include <vector>
+
+#include "hwinfo/cpu.h"
 
 namespace hwinfo {
 namespace filesystem {

@@ -1,7 +1,7 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include <hwinfo/gpu.h>
+#include "hwinfo/gpu.h"
 
 #include <string>
 

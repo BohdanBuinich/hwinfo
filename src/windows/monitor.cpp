@@ -1,8 +1,6 @@
-#include <hwinfo/platform.h>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_WINDOWS
-#include <hwinfo/monitor.h>
-
 // clang-format off
 #include <Windows.h>       // Must be included before SetupAPI.h to avoid dependency issues.
 #include <stringapiset.h>
@@ -13,6 +11,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include "hwinfo/monitor.h"
+#include "hwinfo/utils/constants.h"
 
 #pragma comment(lib, "Setupapi.lib")
 
@@ -44,7 +45,7 @@ std::string ConvertCharArrayToString(const char* input) {
 std::string GetMonitorSerialNumber(int index) {
   HDEVINFO hDevInfo = SetupDiGetClassDevs(&GUID_DEVCLASS_MONITOR, NULL, NULL, DIGCF_PRESENT);
   if (hDevInfo == INVALID_HANDLE_VALUE) {
-    return "<unknown>";
+    return hwinfo::constants::UNKNOWN;
   }
 
   SP_DEVINFO_DATA DeviceInfoData;
@@ -60,7 +61,7 @@ std::string GetMonitorSerialNumber(int index) {
   }
 
   SetupDiDestroyDeviceInfoList(hDevInfo);
-  return "<unknown>";
+  return hwinfo::constants::UNKNOWN;
 }
 
 }  // namespace
@@ -82,15 +83,15 @@ std::vector<Monitor> getAllMonitors() {
       DISPLAY_DEVICE monitorDevice;
       monitorDevice.cb = sizeof(DISPLAY_DEVICE);
 
-      std::string model = "<unknown>";
+      std::string model = constants::UNKNOWN;
       if (EnumDisplayDevices(displayDevice.DeviceName, 0, &monitorDevice, 0)) {
         model = ConvertCharArrayToString(monitorDevice.DeviceString);
       }
 
       DEVMODE devMode;
       devMode.dmSize = sizeof(DEVMODE);
-      std::string resolution = "<unknown>";
-      std::string refreshRateStr = "<unknown>";
+      std::string resolution = constants::UNKNOWN;
+      std::string refreshRateStr = constants::UNKNOWN;
 
       if (EnumDisplaySettings(displayDevice.DeviceName, ENUM_CURRENT_SETTINGS, &devMode)) {
         resolution = std::to_string(devMode.dmPelsWidth) + "x" + std::to_string(devMode.dmPelsHeight);

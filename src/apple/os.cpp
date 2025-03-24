@@ -11,6 +11,7 @@
 #include <string>
 
 #include "hwinfo/os.h"
+#include "hwinfo/utils/constants.h"
 
 namespace hwinfo {
 
@@ -50,7 +51,7 @@ OS::OS() {
     os_version.pop_back();
     _version = os_version;
   } else {
-    _version = "<unknown>";
+    _version = constants::UNKNOWN;
   }
 
   _64bit = true;

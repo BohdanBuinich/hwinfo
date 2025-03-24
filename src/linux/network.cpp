@@ -1,8 +1,7 @@
-#include <hwinfo/platform.h>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_UNIX
 #include <arpa/inet.h>
-#include <hwinfo/network.h>
 #include <ifaddrs.h>
 #include <net/if.h>
 
@@ -12,10 +11,12 @@
 #include <string>
 #include <vector>
 
+#include "hwinfo/network.h"
+#include "hwinfo/utils/constants.h"
+
 namespace hwinfo {
 
 namespace {
-constexpr auto UNKNOWN = "<unknown>";
 
 /**
  * @brief Get a user-friendly description of the interface.
@@ -28,7 +29,7 @@ std::string getDescription(const std::string& path) { return path; }
  */
 std::string getInterfaceIndex(const std::string& iface) {
   unsigned int index = if_nametoindex(iface.c_str());
-  return (index > 0) ? std::to_string(index) : UNKNOWN;
+  return (index > 0) ? std::to_string(index) : constants::UNKNOWN;
 }
 
 /**
@@ -38,12 +39,12 @@ std::string getMac(const std::string& iface) {
   const std::string path = "/sys/class/net/" + iface + "/address";
   std::ifstream ifs(path);
   if (!ifs) {
-    return UNKNOWN;
+    return constants::UNKNOWN;
   }
 
   std::string mac;
   std::getline(ifs, mac);
-  return mac.empty() ? UNKNOWN : mac;
+  return mac.empty() ? constants::UNKNOWN : mac;
 }
 
 /**
@@ -56,7 +57,7 @@ std::string getIp(const std::string& iface, int family) {
   // Use RAII to ensure freeifaddrs is always called.
   struct ifaddrs* rawAddrs = nullptr;
   if (getifaddrs(&rawAddrs) == -1) {
-    return UNKNOWN;
+    return constants::UNKNOWN;
   }
   std::unique_ptr<struct ifaddrs, decltype(&freeifaddrs)> ifAddrs(rawAddrs, freeifaddrs);
 
@@ -90,7 +91,7 @@ std::string getIp(const std::string& iface, int family) {
     }
   }
 
-  return UNKNOWN;
+  return constants::UNKNOWN;
 }
 
 /**
@@ -175,7 +176,7 @@ std::string getInterfaceType(const std::string& iface) {
     }
   }
 
-  return UNKNOWN;
+  return constants::UNKNOWN;
 }
 
 }  // namespace

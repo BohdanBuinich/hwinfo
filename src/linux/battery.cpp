@@ -8,6 +8,7 @@
 #include <fstream>
 
 #include "hwinfo/battery.h"
+#include "hwinfo/utils/constants.h"
 #include "hwinfo/utils/filesystem.h"
 
 namespace hwinfo {
@@ -18,7 +19,7 @@ static std::string base_path = "/sys/class/power_supply/";
 // _____________________________________________________________________________________________________________________
 std::string Battery::getVendor() const {
   if (_id < 0) {
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
   std::ifstream vendor_file(base_path + "BAT" + std::to_string(_id) + "/" + "manufacturer");
   std::string vendor;
@@ -26,13 +27,13 @@ std::string Battery::getVendor() const {
     getline(vendor_file, vendor);
     return vendor;
   }
-  return "<unknown>";
+  return constants::UNKNOWN;
 }
 
 // _____________________________________________________________________________________________________________________
 std::string Battery::getModel() const {
   if (_id < 0) {
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
   std::ifstream vendor_file(base_path + "BAT" + std::to_string(_id) + "/" + "model_name");
   std::string value;
@@ -40,13 +41,13 @@ std::string Battery::getModel() const {
     getline(vendor_file, value);
     return value;
   }
-  return "<unknown>";
+  return constants::UNKNOWN;
 }
 
 // _____________________________________________________________________________________________________________________
 std::string Battery::getSerialNumber() const {
   if (_id < 0) {
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
   std::ifstream vendor_file(base_path + "BAT" + std::to_string(_id) + "/" + "serial_number");
   std::string value;
@@ -54,13 +55,13 @@ std::string Battery::getSerialNumber() const {
     getline(vendor_file, value);
     return value;
   }
-  return "<unknown>";
+  return constants::UNKNOWN;
 }
 
 // _____________________________________________________________________________________________________________________
 std::string Battery::getTechnology() const {
   if (_id < 0) {
-    return "<unknown>";
+    return constants::UNKNOWN;
   }
   std::ifstream vendor_file(base_path + "BAT" + std::to_string(_id) + "/" + "technology");
   std::string value;
@@ -68,7 +69,7 @@ std::string Battery::getTechnology() const {
     getline(vendor_file, value);
     return value;
   }
-  return "<unknown>";
+  return constants::UNKNOWN;
 }
 
 // _____________________________________________________________________________________________________________________

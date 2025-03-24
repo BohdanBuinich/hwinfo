@@ -5,4 +5,4 @@
  * This file is part of hwinfo.
  */
 
-#include <hwinfo/hwinfo.h>
+#include "hwinfo/hwinfo.h"

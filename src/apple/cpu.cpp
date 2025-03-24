@@ -15,6 +15,7 @@
 
 #include "hwinfo/cpu.h"
 #include "hwinfo/cpuid.h"
+#include "hwinfo/utils/constants.h"
 
 namespace hwinfo {
 
@@ -55,7 +56,7 @@ std::string getVendor() {
   return vendor;
 #else
   // TODO: implement
-  return "<unknown>";
+  return constants::UNKNOWN;
 #endif
 }
 
@@ -117,7 +118,7 @@ std::string getModelName() {
     model.pop_back();
     return model;
   }
-  return "<unknown>";
+  return constants::UNKNOWN;
 #endif
 }
 

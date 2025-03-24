@@ -1,18 +1,20 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include <hwinfo/platform.h>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_UNIX
 
-#include <hwinfo/disk.h>
-#include <hwinfo/utils/filesystem.h>
-#include <hwinfo/utils/stringutils.h>
 #include <sys/statvfs.h>
 
 #include <fstream>
 #include <regex>
 #include <vector>
+
+#include "hwinfo/disk.h"
+#include "hwinfo/utils/constants.h"
+#include "hwinfo/utils/filesystem.h"
+#include "hwinfo/utils/stringutils.h"
 
 namespace {
 // _____________________________________________________________________________________________________________________
@@ -61,19 +63,19 @@ std::string getDiskVendor(const std::string& path) {
   }
 
   std::string vendor;
-  return readFile(vendor_path + "/device/vendor", vendor) ? vendor : "<unknown>";
+  return readFile(vendor_path + "/device/vendor", vendor) ? vendor : constants::UNKNOWN;
 }
 
 // _____________________________________________________________________________________________________________________
 std::string getDiskModel(const std::string& path) {
   std::string model;
-  return readFile(path + "/device/model", model) ? model : "<unknown>";
+  return readFile(path + "/device/model", model) ? model : constants::UNKNOWN;
 }
 
 // _____________________________________________________________________________________________________________________
 std::string getDiskSerialNumber(const std::string& path) {
   std::string serial;
-  return readFile(path + "/device/serial", serial) ? serial : "<unknown>";
+  return readFile(path + "/device/serial", serial) ? serial : constants::UNKNOWN;
 }
 
 // _____________________________________________________________________________________________________________________
@@ -113,7 +115,8 @@ std::vector<Disk> getAllDisks() {
     disk._serialNumber = getDiskSerialNumber(path);
 
     // Check before get size because size is always define in /sys/class/block/...
-    if (disk._vendor == "<unknown>" && disk._model == "<unknown>" && disk._serialNumber == "<unknown>") {
+    if (disk._vendor == constants::UNKNOWN && disk._model == constants::UNKNOWN &&
+        disk._serialNumber == constants::UNKNOWN) {
       continue;
     }
 

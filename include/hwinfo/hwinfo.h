@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <hwinfo/battery.h>
-#include <hwinfo/cpu.h>
-#include <hwinfo/disk.h>
-#include <hwinfo/gpu.h>
-#include <hwinfo/mainboard.h>
-#include <hwinfo/monitor.h>
-#include <hwinfo/network.h>
-#include <hwinfo/os.h>
-#include <hwinfo/ram.h>
+#include "hwinfo/battery.h"
+#include "hwinfo/cpu.h"
+#include "hwinfo/disk.h"
+#include "hwinfo/gpu.h"
+#include "hwinfo/mainboard.h"
+#include "hwinfo/monitor.h"
+#include "hwinfo/network.h"
+#include "hwinfo/os.h"
+#include "hwinfo/ram.h"

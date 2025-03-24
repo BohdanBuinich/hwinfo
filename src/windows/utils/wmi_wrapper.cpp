@@ -1,10 +1,10 @@
-#include <hwinfo/utils/wmi_wrapper.h>
+#include "hwinfo/utils/wmi_wrapper.h"
 
 #ifdef HWINFO_WINDOWS
 
-#include <hwinfo/utils/stringutils.h>
-
 #include <vector>
+
+#include "hwinfo/utils/stringutils.h"
 
 namespace hwinfo {
 namespace utils {

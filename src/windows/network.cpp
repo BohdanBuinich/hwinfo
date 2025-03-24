@@ -2,13 +2,14 @@
 
 #ifdef HWINFO_WINDOWS
 
-#include <hwinfo/network.h>
-#include <hwinfo/utils/stringutils.h>
-#include <hwinfo/utils/wmi_wrapper.h>
-
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "hwinfo/network.h"
+#include "hwinfo/utils/constants.h"
+#include "hwinfo/utils/stringutils.h"
+#include "hwinfo/utils/wmi_wrapper.h"
 
 namespace hwinfo {
 
@@ -35,7 +36,7 @@ inline std::string adapterTypeIDToString(unsigned short typeID, const std::wstri
   if (name.find(L"Hyper-V") != std::wstring::npos) return "Hyper-V Virtual Adapter";
   if (pnpDeviceID.find(L"USB") != std::wstring::npos || name.find(L"USB") != std::wstring::npos) return "USB Ethernet";
 
-  return "<unknown>";
+  return constants::UNKNOWN;
 }
 
 /**
@@ -203,14 +204,14 @@ std::vector<Network> getAllNetworks() {
         if (auto it = adapterTypeMap.find(idx); it != adapterTypeMap.end()) {
           network._type = it->second;
         } else {
-          network._type = "<unknown>";
+          network._type = constants::UNKNOWN;
         }
       } catch (...) {
         // Could not parse index; leave type as unknown
-        network._type = "<unknown>";
+        network._type = constants::UNKNOWN;
       }
     } else {
-      network._type = "<unknown>";
+      network._type = constants::UNKNOWN;
     }
 
     // Release WMI object for this iteration

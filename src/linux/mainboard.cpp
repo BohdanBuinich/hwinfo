@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "hwinfo/mainboard.h"
+#include "hwinfo/utils/constants.h"
 
 namespace hwinfo {
 
@@ -27,7 +28,7 @@ std::string get_dmi_by_name(const std::string& name) {
       }
     }
   }
-  return "<unknown>";
+  return constants::UNKNOWN;
 }
 
 // _____________________________________________________________________________________________________________________

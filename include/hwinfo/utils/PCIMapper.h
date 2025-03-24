@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <hwinfo/platform.h>
+#include "hwinfo/platform.h"
 
 #ifdef HWINFO_UNIX
 

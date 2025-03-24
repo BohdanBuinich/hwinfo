@@ -1,7 +1,7 @@
 // Copyright Leon Freist
 // Author Leon Freist <freist@informatik.uni-freiburg.de>
 
-#include <hwinfo/disk.h>
+#include "hwinfo/disk.h"
 
 namespace hwinfo {
 // _____________________________________________________________________________________________________________________
