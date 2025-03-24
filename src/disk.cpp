@@ -4,7 +4,6 @@
 #include <hwinfo/disk.h>
 
 namespace hwinfo {
-
 // _____________________________________________________________________________________________________________________
 const std::string& Disk::vendor() const { return _vendor; }
 
@@ -25,5 +24,4 @@ int Disk::id() const { return _id; }
 
 // _____________________________________________________________________________________________________________________
 const std::vector<std::string>& Disk::volumes() const { return _volumes; }
-
 }  // namespace hwinfo
