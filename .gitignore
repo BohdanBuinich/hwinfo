@@ -1,5 +1,19 @@
-/**/.vscode/**
-/**/build/**
-/.vs
-/CMakeSettings.json
+# Ignore VSCode files in any directory
+**/.vscode/**
+
+# Ignore build directories in any path
+**/build/**
+
+# Ignore build directories starting with 'cmake-build'
+cmake-build*/
+
+# Ignore Visual Studio folders and files
+.vs/
+CMakeSettings.json
+
+# Ignore JetBrains IDE files (CLion, PyCharm, etc.)
+.idea/
+
+# Ignore general cache folders
 /.cache/
+**/.cache/
