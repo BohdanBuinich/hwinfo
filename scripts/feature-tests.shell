@@ -1,52 +1,170 @@
-#!/bin/bash -ex
-# bash or pwsh
+#!/usr/bin/env bash
+# Exit on errors (-e), print commands (-x), fail on undefined vars (-u), and fail on pipe errors (-o pipefail).
+set -euxo pipefail
 
-# Test default (all)
-cmake -B ./build -DCMAKE_BUILD_TYPE=Release
-cmake --build ./build --parallel --config Release
-cd build
-ctest -C Release -V
-cd ..
+#--------------------------------------------------------------------------
+# build_and_test:
+#   A helper function to configure, build, and optionally test a target.
+#--------------------------------------------------------------------------
+build_and_test() {
+    local build_type="$1"
+    shift
+    local cmake_args=("$@")  # Remainder are CMake options
 
-# Test OS target
-rm build/CMakeCache.txt
-cmake -B ./build -DCMAKE_BUILD_TYPE=Debug -DHWINFO_OS=ON -DHWINFO_MAINBOARD=OFF -DHWINFO_CPU=OFF -DHWINFO_DISK=OFF -DHWINFO_RAM=OFF -DHWINFO_GPU=OFF -DHWINFO_GPU_OPENCL=OFF -DHWINFO_BATTERY=OFF
-cmake --build ./build --parallel --config Debug -t hwinfo_os
+    # Remove old CMake cache if present (keeps this scenario clean)
+    rm -f build/CMakeCache.txt
 
-# Test mainboard target
-rm build/CMakeCache.txt
-cmake -B ./build -DCMAKE_BUILD_TYPE=Debug -DHWINFO_OS=OFF -DHWINFO_MAINBOARD=ON -DHWINFO_CPU=OFF -DHWINFO_DISK=OFF -DHWINFO_RAM=OFF -DHWINFO_GPU=OFF -DHWINFO_GPU_OPENCL=OFF -DHWINFO_BATTERY=OFF
-cmake --build ./build --parallel --config Debug -t hwinfo_mainboard
+    if [ ${#cmake_args[@]} -gt 0 ]; then
+        echo "=== Configuring with '${cmake_args[*]}' in ${build_type} mode ==="
+        cmake -B build -DCMAKE_BUILD_TYPE="${build_type}" "${cmake_args[@]}"
+    else
+        echo "=== Configuring with no extra CMake args in ${build_type} mode ==="
+        cmake -B build -DCMAKE_BUILD_TYPE="${build_type}"
+    fi
 
-# Test CPU target
-rm build/CMakeCache.txt
-cmake -B ./build -DCMAKE_BUILD_TYPE=Debug -DHWINFO_OS=OFF -DHWINFO_MAINBOARD=OFF -DHWINFO_CPU=ON -DHWINFO_DISK=OFF -DHWINFO_RAM=OFF -DHWINFO_GPU=OFF -DHWINFO_GPU_OPENCL=OFF -DHWINFO_BATTERY=OFF
-cmake --build ./build --parallel --config Debug -t hwinfo_cpu
+    echo "=== Building in ${build_type} mode ==="
+    cmake --build build --parallel --config "${build_type}"
+}
 
-# Test disk target
-rm build/CMakeCache.txt
-cmake -B ./build -DCMAKE_BUILD_TYPE=Debug -DHWINFO_OS=OFF -DHWINFO_MAINBOARD=OFF -DHWINFO_CPU=OFF -DHWINFO_DISK=ON -DHWINFO_RAM=OFF -DHWINFO_GPU=OFF -DHWINFO_GPU_OPENCL=OFF -DHWINFO_BATTERY=OFF
-cmake --build ./build --parallel --config Debug -t hwinfo_disk
+#--------------------------------------------------------------------------
+# build_and_test_target:
+#   Same as build_and_test, but also specifies a single target to build.
+#--------------------------------------------------------------------------
+build_and_test_target() {
+    local build_type="$1"
+    local target_name="$2"
+    shift 2
+    local cmake_args=("$@")
 
-# Test RAM target
-rm build/CMakeCache.txt
-cmake -B ./build -DCMAKE_BUILD_TYPE=Debug -DHWINFO_OS=OFF -DHWINFO_MAINBOARD=OFF -DHWINFO_CPU=OFF -DHWINFO_DISK=OFF -DHWINFO_RAM=ON -DHWINFO_GPU=OFF -DHWINFO_GPU_OPENCL=OFF -DHWINFO_BATTERY=OFF
-cmake --build ./build --parallel --config Debug -t hwinfo_ram
+    # Remove old CMake cache if present (keeps this scenario clean)
+    rm -f build/CMakeCache.txt
 
-# Test GPU target
-rm build/CMakeCache.txt
-cmake -B ./build -DCMAKE_BUILD_TYPE=Debug -DHWINFO_OS=OFF -DHWINFO_MAINBOARD=OFF -DHWINFO_CPU=OFF -DHWINFO_DISK=OFF -DHWINFO_RAM=OFF -DHWINFO_GPU=ON -DHWINFO_GPU_OPENCL=OFF -DHWINFO_BATTERY=OFF
-cmake --build ./build --parallel --config Debug -t hwinfo_gpu
+    echo "=== Configuring target '${target_name}' in ${build_type} mode with '${cmake_args[*]}' ==="
+    cmake -B build -DCMAKE_BUILD_TYPE="${build_type}" "${cmake_args[@]}"
 
-# # Test GPU target with OpenCL
-# rm build/CMakeCache.txt
-# cmake -B ./build -DCMAKE_BUILD_TYPE=Debug -DHWINFO_OS=OFF -DHWINFO_MAINBOARD=OFF -DHWINFO_CPU=OFF -DHWINFO_DISK=OFF -DHWINFO_RAM=OFF -DHWINFO_GPU=ON -DHWINFO_GPU_OPENCL=ON -DHWINFO_BATTERY=OFF
-# cmake --build ./build --parallel --config Debug -t hwinfo_gpu
+    echo "=== Building target '${target_name}' in ${build_type} mode ==="
+    cmake --build build --parallel --config "${build_type}" -t "${target_name}"
+}
 
-# Test battery target
-rm build/CMakeCache.txt
-cmake -B ./build -DCMAKE_BUILD_TYPE=Debug -DHWINFO_OS=OFF -DHWINFO_MAINBOARD=OFF -DHWINFO_CPU=OFF -DHWINFO_DISK=OFF -DHWINFO_RAM=OFF -DHWINFO_GPU=OFF -DHWINFO_GPU_OPENCL=OFF -DHWINFO_BATTERY=ON
-cmake --build ./build --parallel --config Debug -t hwinfo_battery
+#--------------------------------------------------------------------------
+# 1) Build default (all ON) in Release and run tests
+#--------------------------------------------------------------------------
+build_and_test "Release"
+(
+    cd build
+    ctest -C Release -V
+)
 
-# Clean up
-rm build/CMakeCache.txt
+#--------------------------------------------------------------------------
+# 2) Test OS target (only HWINFO_OS=ON, rest OFF) in Debug
+#--------------------------------------------------------------------------
+build_and_test_target "Debug" "hwinfo_os" \
+    -DHWINFO_OS=ON \
+    -DHWINFO_MAINBOARD=OFF \
+    -DHWINFO_CPU=OFF \
+    -DHWINFO_DISK=OFF \
+    -DHWINFO_RAM=OFF \
+    -DHWINFO_GPU=OFF \
+    -DHWINFO_GPU_OPENCL=OFF \
+    -DHWINFO_BATTERY=OFF \
+    -DHWINFO_NETWORK=OFF
+
+#--------------------------------------------------------------------------
+# 3) Test mainboard target
+#--------------------------------------------------------------------------
+build_and_test_target "Debug" "hwinfo_mainboard" \
+    -DHWINFO_OS=OFF \
+    -DHWINFO_MAINBOARD=ON \
+    -DHWINFO_CPU=OFF \
+    -DHWINFO_DISK=OFF \
+    -DHWINFO_RAM=OFF \
+    -DHWINFO_GPU=OFF \
+    -DHWINFO_GPU_OPENCL=OFF \
+    -DHWINFO_BATTERY=OFF \
+    -DHWINFO_NETWORK=OFF
+
+#--------------------------------------------------------------------------
+# 4) Test CPU target
+#--------------------------------------------------------------------------
+build_and_test_target "Debug" "hwinfo_cpu" \
+    -DHWINFO_OS=OFF \
+    -DHWINFO_MAINBOARD=OFF \
+    -DHWINFO_CPU=ON \
+    -DHWINFO_DISK=OFF \
+    -DHWINFO_RAM=OFF \
+    -DHWINFO_GPU=OFF \
+    -DHWINFO_GPU_OPENCL=OFF \
+    -DHWINFO_BATTERY=OFF \
+    -DHWINFO_NETWORK=OFF
+
+#--------------------------------------------------------------------------
+# 5) Test disk target
+#--------------------------------------------------------------------------
+build_and_test_target "Debug" "hwinfo_disk" \
+    -DHWINFO_OS=OFF \
+    -DHWINFO_MAINBOARD=OFF \
+    -DHWINFO_CPU=OFF \
+    -DHWINFO_DISK=ON \
+    -DHWINFO_RAM=OFF \
+    -DHWINFO_GPU=OFF \
+    -DHWINFO_GPU_OPENCL=OFF \
+    -DHWINFO_BATTERY=OFF \
+    -DHWINFO_NETWORK=OFF
+
+#--------------------------------------------------------------------------
+# 6) Test RAM target
+#--------------------------------------------------------------------------
+build_and_test_target "Debug" "hwinfo_ram" \
+    -DHWINFO_OS=OFF \
+    -DHWINFO_MAINBOARD=OFF \
+    -DHWINFO_CPU=OFF \
+    -DHWINFO_DISK=OFF \
+    -DHWINFO_RAM=ON \
+    -DHWINFO_GPU=OFF \
+    -DHWINFO_GPU_OPENCL=OFF \
+    -DHWINFO_BATTERY=OFF \
+    -DHWINFO_NETWORK=OFF
+
+#--------------------------------------------------------------------------
+# 7) Test GPU target
+#--------------------------------------------------------------------------
+build_and_test_target "Debug" "hwinfo_gpu" \
+    -DHWINFO_OS=OFF \
+    -DHWINFO_MAINBOARD=OFF \
+    -DHWINFO_CPU=OFF \
+    -DHWINFO_DISK=OFF \
+    -DHWINFO_RAM=OFF \
+    -DHWINFO_GPU=ON \
+    -DHWINFO_GPU_OPENCL=OFF \
+    -DHWINFO_BATTERY=OFF \
+    -DHWINFO_NETWORK=OFF
+
+## Uncomment to Test GPU target with OpenCL
+# build_and_test_target "Debug" "hwinfo_gpu" \
+#     -DHWINFO_OS=OFF \
+#     -DHWINFO_MAINBOARD=OFF \
+#     -DHWINFO_CPU=OFF \
+#     -DHWINFO_DISK=OFF \
+#     -DHWINFO_RAM=OFF \
+#     -DHWINFO_GPU=ON \
+#     -DHWINFO_GPU_OPENCL=ON \
+#     -DHWINFO_BATTERY=OFF \
+#     -DHWINFO_NETWORK=OFF
+#--------------------------------------------------------------------------
+# 8) Test battery target
+#--------------------------------------------------------------------------
+build_and_test_target "Debug" "hwinfo_battery" \
+    -DHWINFO_OS=OFF \
+    -DHWINFO_MAINBOARD=OFF \
+    -DHWINFO_CPU=OFF \
+    -DHWINFO_DISK=OFF \
+    -DHWINFO_RAM=OFF \
+    -DHWINFO_GPU=OFF \
+    -DHWINFO_GPU_OPENCL=OFF \
+    -DHWINFO_BATTERY=ON \
+    -DHWINFO_NETWORK=OFF
+
+#--------------------------------------------------------------------------
+# Finally, clean up
+#--------------------------------------------------------------------------
+rm -f build/CMakeCache.txt

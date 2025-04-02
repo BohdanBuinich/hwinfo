@@ -85,13 +85,13 @@ or
 target_link_libraries(
         your_target
         PRIVATE
-        hwinfo::cpu
-        hwinfo::gpu
-        hwinfo::ram
-        hwinfo::mainboard
-        hwinfo::disk
-        hwinfo::os
-        hwinfo::battery)
+        lfreist-hwinfo::hwinfo_cpu
+        lfreist-hwinfo::hwinfo_gpu
+        lfreist-hwinfo::hwinfo_ram
+        lfreist-hwinfo::hwinfo_mainboard
+        lfreist-hwinfo::hwinfo_disk
+        lfreist-hwinfo::hwinfo_os
+        lfreist-hwinfo::hwinfo_battery)
 ```
 
 The CMake options control which components will be built and available in the library:

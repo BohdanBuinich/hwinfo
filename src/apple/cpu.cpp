@@ -9,6 +9,7 @@
 #include <mach/mach_time.h>
 #include <sys/sysctl.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 

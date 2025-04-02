@@ -1,13 +1,92 @@
-# ----- hwinfo ---------------------------------------------------------------------------------------------------------
+include(GNUInstallDirs)
+
+# Set include dir
+set(HWINFO_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+
+# Create an INTERFACE library to gather all hwinfo components
 add_library(hwinfo INTERFACE)
-target_include_directories(hwinfo INTERFACE $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 add_library(lfreist-hwinfo::hwinfo ALIAS hwinfo)
+
+target_include_directories(hwinfo INTERFACE
+        $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 set_target_properties(hwinfo PROPERTIES OUTPUT_NAME "hwinfo")
 
+# ------------------------------------------------------------------------------------------------
+# add_hwinfo_component(NAME [SOURCES ...] [LINK_LIBS ...] [COMPILE_DEFS ...] [INCLUDE_DIRS ...])
+#
+# Creates:
+#   1) A real library target called hwinfo_<NAME>.
+#   2) An ALIAS lfreist-hwinfo::<NAME> pointing to hwinfo_<NAME>.
+#   3) Adds hwinfo_<NAME> into the aggregator library "hwinfo".
+#   4) Installs hwinfo_<NAME> into the same export set (hwinfoTargets).
+# ------------------------------------------------------------------------------------------------
+function(add_hwinfo_component NAME)
+    cmake_parse_arguments(COMP "" "" "SOURCES;LINK_LIBS;COMPILE_DEFS;INCLUDE_DIRS" ${ARGN})
+
+    # Check that at least one source is provided
+    if(NOT COMP_SOURCES)
+        message(FATAL_ERROR
+                "No source files provided for component '${NAME}'. "
+                "Please pass at least one source via SOURCES parameter."
+        )
+    endif()
+
+    # Replace '-' with '_' and reassign to CMAKE_PROJECT_NAME
+    string(REPLACE "-" "_" CMAKE_PROJECT_NAME "${CMAKE_PROJECT_NAME}")
+
+    # Create the library target for this component (e.g., hwinfo_cpu).
+    add_library(hwinfo_${NAME} ${COMP_SOURCES})
+    set_target_properties(hwinfo_${NAME} PROPERTIES
+            OUTPUT_NAME "hwinfo_${NAME}"
+    )
+
+    # Create an ALIAS for easy usage (lfreist-hwinfo::hwinfo_<NAME>).
+    add_library(lfreist-hwinfo::hwinfo_${NAME} ALIAS hwinfo_${NAME})
+
+    # Include directories
+    target_include_directories(hwinfo_${NAME} PUBLIC
+            $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+
+            # Optionally include user-specified directories
+            ${COMP_INCLUDE_DIRS}
+    )
+
+    # Compile definitions
+    target_compile_definitions(hwinfo_${NAME} PUBLIC
+            $<$<BOOL:${HWINFO_SHARED}>:${CMAKE_PROJECT_NAME}_EXPORTS>
+            ${COMP_COMPILE_DEFS}
+    )
+
+    # Link libraries, if any were provided
+    if(COMP_LINK_LIBS)
+        target_link_libraries(hwinfo_${NAME} PRIVATE ${COMP_LINK_LIBS})
+    endif()
+
+    # Make the INTERFACE library "hwinfo" depend on this component.
+    target_link_libraries(hwinfo INTERFACE hwinfo_${NAME})
+
+    # Install the component library (into the same export set).
+    install(TARGETS hwinfo_${NAME}
+            EXPORT hwinfoTargets
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+    # Install the component's public header(s).
+    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/${NAME}.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo
+            OPTIONAL  # If the header doesn't exist, won't fail the install
+    )
+endfunction()
+
 # === Components =======================================================================================================
-# ----- BATTERY --------------------------------------------------------------------------------------------------------
+
 if (HWINFO_BATTERY)
-    set(BATTERY_SRC_FILES
+    set(BATTERY_SOURCES
             battery.cpp
             apple/battery.cpp
             linux/battery.cpp
@@ -16,31 +95,23 @@ if (HWINFO_BATTERY)
             windows/utils/wmi_wrapper.cpp
     )
 
-    add_library(hwinfo_battery ${HWINFO_BUILD} ${BATTERY_SRC_FILES})
-    if(${HWINFO_SHARED})
-        target_compile_definitions(hwinfo_battery PUBLIC -DHWINFO_EXPORTS)
+    set(BATTERY_LINK_LIBS "")
+    if (APPLE)
+        list(APPEND BATTERY_LINK_LIBS
+                "-framework IOKit"
+                "-framework CoreFoundation"
+        )
     endif()
-    target_include_directories(hwinfo_battery PUBLIC $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-    if(APPLE)
-        target_link_libraries(hwinfo_battery PRIVATE "-framework IOKit" "-framework CoreFoundation")
-    endif()
 
-    target_link_libraries(hwinfo INTERFACE hwinfo_battery)
+    # Create the battery component
+    add_hwinfo_component(battery
+            SOURCES     ${BATTERY_SOURCES}
+            LINK_LIBS   ${BATTERY_LINK_LIBS}
+    )
+endif()
 
-    set_target_properties(hwinfo_battery PROPERTIES OUTPUT_NAME "hwinfo_battery")
-
-    install(TARGETS hwinfo_battery
-            EXPORT lfreist-hwinfoTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
-    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/battery.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-endif ()
-# ______________________________________________________________________________________________________________________
-
-# ----- CPU ------------------------------------------------------------------------------------------------------------
 if (HWINFO_CPU)
-    set(CPU_SRC_FILES
+    set(CPU_SOURCES
             cpu.cpp
             apple/cpu.cpp
             linux/cpu.cpp
@@ -51,28 +122,13 @@ if (HWINFO_CPU)
             linux/utils/filesystem.cpp
     )
 
-    add_library(hwinfo_cpu ${HWINFO_BUILD} ${CPU_SRC_FILES})
-    if(${HWINFO_SHARED})
-        target_compile_definitions(hwinfo_cpu PUBLIC -DHWINFO_EXPORTS)
-    endif()
-    target_include_directories(hwinfo_cpu PUBLIC $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-
-    target_link_libraries(hwinfo INTERFACE hwinfo_cpu)
-
-    set_target_properties(hwinfo_cpu PROPERTIES OUTPUT_NAME "hwinfo_cpu")
-
-    install(TARGETS hwinfo_cpu
-            EXPORT lfreist-hwinfoTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
-    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/cpu.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
+    add_hwinfo_component(cpu
+            SOURCES ${CPU_SOURCES}
+    )
 endif()
-# ______________________________________________________________________________________________________________________
 
-# ----- DISK -----------------------------------------------------------------------------------------------------------
 if (HWINFO_DISK)
-    set(DISK_SRC_FILES
+    set(DISK_SOURCES
             disk.cpp
             apple/disk.cpp
             linux/disk.cpp
@@ -82,32 +138,22 @@ if (HWINFO_DISK)
             linux/utils/filesystem.cpp
     )
 
-    add_library(hwinfo_disk ${HWINFO_BUILD} ${DISK_SRC_FILES})
-    if(${HWINFO_SHARED})
-        target_compile_definitions(hwinfo_disk PUBLIC -DHWINFO_EXPORTS)
+    set(DISK_LINK_LIBS "")
+    if (APPLE)
+        list(APPEND DISK_LINK_LIBS
+                "-framework IOKit"
+                "-framework CoreFoundation"
+        )
     endif()
-    target_include_directories(hwinfo_disk PUBLIC $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-    if(APPLE)
-        target_link_libraries(hwinfo_disk PRIVATE "-framework IOKit" "-framework CoreFoundation")
-    endif()
 
+    add_hwinfo_component(disk
+            SOURCES   ${DISK_SOURCES}
+            LINK_LIBS ${DISK_LINK_LIBS}
+    )
+endif()
 
-    target_link_libraries(hwinfo INTERFACE hwinfo_disk)
-
-    set_target_properties(hwinfo_disk PROPERTIES OUTPUT_NAME "hwinfo_disk")
-
-    install(TARGETS hwinfo_disk
-            EXPORT lfreist-hwinfoTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
-    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/disk.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-endif ()
-# ______________________________________________________________________________________________________________________
-
-# ----- GPU ------------------------------------------------------------------------------------------------------------
 if (HWINFO_GPU)
-    set(GPU_SRC_FILES
+    set(GPU_SOURCES
             gpu.cpp
             apple/gpu.cpp
             linux/gpu.cpp
@@ -120,40 +166,28 @@ if (HWINFO_GPU)
             PCIMapper.cpp
     )
 
+    # Start with no special link libs or defs
+    set(GPU_LINK_LIBS "")
+    set(GPU_COMPILE_DEFS "")  # Only needed if we set compile definitions
+
     if (HWINFO_GPU_OPENCL)
-        add_subdirectory(opencl)
-    endif ()
-
-    add_library(hwinfo_gpu ${HWINFO_BUILD} ${GPU_SRC_FILES})
-    if(${HWINFO_SHARED})
-        target_compile_definitions(hwinfo_gpu PUBLIC -DHWINFO_EXPORTS)
+        add_subdirectory(opencl)       # Builds "opencl_device" or similar
+        list(APPEND GPU_COMPILE_DEFS "USE_OCL")
+        list(APPEND GPU_LINK_LIBS opencl_device)
+        install(DIRECTORY ${HWINFO_INCLUDE_DIR}/hwinfo/opencl
+                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo
+        )
     endif()
-    if(HWINFO_GPU_OPENCL)
-        target_compile_definitions(hwinfo_gpu PUBLIC USE_OCL)
-        target_link_libraries(hwinfo_gpu PRIVATE opencl_device)
-    endif ()
-    target_include_directories(hwinfo_gpu PUBLIC $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
+    add_hwinfo_component(gpu
+            SOURCES       ${GPU_SOURCES}
+            LINK_LIBS     ${GPU_LINK_LIBS}
+            COMPILE_DEFS  ${GPU_COMPILE_DEFS}
+    )
+endif()
 
-    target_link_libraries(hwinfo INTERFACE hwinfo_gpu)
-
-    set_target_properties(hwinfo_gpu PROPERTIES OUTPUT_NAME "hwinfo_gpu")
-
-    install(TARGETS hwinfo_gpu
-            EXPORT lfreist-hwinfoTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
-    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/gpu.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-    if(HWINFO_GPU_OPENCL)
-        install(DIRECTORY ${HWINFO_INCLUDE_DIR}/hwinfo/opencl DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-    endif ()
-endif ()
-# ______________________________________________________________________________________________________________________
-
-# ----- Mainboard ------------------------------------------------------------------------------------------------------
 if (HWINFO_MAINBOARD)
-    set(MAINBOARD_SRC_FILES
+    set(MAINBOARD_SOURCES
             mainboard.cpp
             apple/mainboard.cpp
             linux/mainboard.cpp
@@ -164,28 +198,13 @@ if (HWINFO_MAINBOARD)
             linux/utils/filesystem.cpp
     )
 
-    add_library(hwinfo_mainboard ${HWINFO_BUILD} ${MAINBOARD_SRC_FILES})
-    if(${HWINFO_SHARED})
-        target_compile_definitions(hwinfo_mainboard PUBLIC -DHWINFO_EXPORTS)
-    endif()
-    target_include_directories(hwinfo_mainboard PUBLIC $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    add_hwinfo_component(mainboard
+            SOURCES ${MAINBOARD_SOURCES}
+    )
+endif()
 
-    target_link_libraries(hwinfo INTERFACE hwinfo_mainboard)
-
-    set_target_properties(hwinfo_mainboard PROPERTIES OUTPUT_NAME "hwinfo_mainboard")
-
-    install(TARGETS hwinfo_mainboard
-            EXPORT lfreist-hwinfoTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
-    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/mainboard.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-endif ()
-# ______________________________________________________________________________________________________________________
-
-# ----- OS -------------------------------------------------------------------------------------------------------------
 if (HWINFO_OS)
-    set(OS_SRC_FILES
+    set(OS_SOURCES
             os.cpp
             apple/os.cpp
             linux/os.cpp
@@ -196,63 +215,29 @@ if (HWINFO_OS)
             linux/utils/filesystem.cpp
     )
 
-    add_library(hwinfo_os ${HWINFO_BUILD} ${OS_SRC_FILES})
-    if(${HWINFO_SHARED})
-        target_compile_definitions(hwinfo_os PUBLIC -DHWINFO_EXPORTS)
-    endif()
-    target_include_directories(hwinfo_os PUBLIC $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    add_hwinfo_component(os
+            SOURCES ${OS_SOURCES}
+    )
+endif()
 
-
-
-    target_link_libraries(hwinfo INTERFACE hwinfo_os)
-
-    set_target_properties(hwinfo_os PROPERTIES OUTPUT_NAME "hwinfo_os")
-
-    install(TARGETS hwinfo_os
-            EXPORT lfreist-hwinfoTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
-    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/os.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-endif ()
-# ______________________________________________________________________________________________________________________
-
-# ----- RAM ------------------------------------------------------------------------------------------------------------
 if (HWINFO_RAM)
-    set(RAM_SRC_FILES
+    set(RAM_SOURCES
             ram.cpp
             apple/ram.cpp
             linux/ram.cpp
             windows/ram.cpp
-
             windows/utils/wmi_wrapper.cpp
             apple/utils/filesystem.cpp
             linux/utils/filesystem.cpp
     )
 
-    add_library(hwinfo_ram ${HWINFO_BUILD} ${RAM_SRC_FILES})
-    if(${HWINFO_SHARED})
-        target_compile_definitions(hwinfo_ram PUBLIC -DHWINFO_EXPORTS)
-    endif()
-    target_include_directories(hwinfo_ram PUBLIC $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    add_hwinfo_component(ram
+            SOURCES ${RAM_SOURCES}
+    )
+endif()
 
-    target_link_libraries(hwinfo INTERFACE hwinfo_ram)
-
-    set_target_properties(hwinfo_ram PROPERTIES OUTPUT_NAME "hwinfo_ram")
-
-    install(TARGETS hwinfo_ram
-            EXPORT lfreist-hwinfoTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
-
-    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/ram.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-endif ()
-# ______________________________________________________________________________________________________________________
-
-# ----- NETWORK --------------------------------------------------------------------------------------------------------
 if (HWINFO_NETWORK)
-    set(NETWORK_SRC_FILES
+    set(NETWORK_SOURCES
             network.cpp
             apple/network.cpp
             linux/network.cpp
@@ -263,32 +248,27 @@ if (HWINFO_NETWORK)
             linux/utils/filesystem.cpp
     )
 
-    add_library(hwinfo_network ${HWINFO_BUILD} ${NETWORK_SRC_FILES})
-    if(${HWINFO_SHARED})
-        target_compile_definitions(hwinfo_network PUBLIC -DHWINFO_EXPORTS)
-    endif()
-    target_include_directories(hwinfo_network PUBLIC $<BUILD_INTERFACE:${HWINFO_INCLUDE_DIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    add_hwinfo_component(network
+            SOURCES ${NETWORK_SOURCES}
+    )
+endif()
 
+# === Install Headers & Interface Library =============================================================================
 
+install(FILES
+        ${HWINFO_INCLUDE_DIR}/hwinfo/platform.h
+        ${HWINFO_INCLUDE_DIR}/hwinfo/hwinfo.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo
+)
 
-    target_link_libraries(hwinfo INTERFACE hwinfo_network)
+install(DIRECTORY ${HWINFO_INCLUDE_DIR}/hwinfo/utils
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo
+)
 
-    set_target_properties(hwinfo_network PROPERTIES OUTPUT_NAME "hwinfo_network")
-
-    install(TARGETS hwinfo_network
-            EXPORT lfreist-hwinfoTargets
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
-    install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/network.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-endif ()
-# ______________________________________________________________________________________________________________________
-
-install(FILES ${HWINFO_INCLUDE_DIR}/hwinfo/platform.h ${HWINFO_INCLUDE_DIR}/hwinfo/hwinfo.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
-install(DIRECTORY ${HWINFO_INCLUDE_DIR}/hwinfo/utils DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hwinfo)
+# Install the aggregator library (INTERFACE) to the same export set
 install(TARGETS hwinfo
-        EXPORT lfreist-hwinfoTargets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
+        EXPORT hwinfoTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
