@@ -264,7 +264,17 @@ if (HWINFO_MONITOR)
     set(MONITOR_LINK_LIBS "")
     set(MONITOR_INCLUDE_DIRS "")
 
-    if (APPLE)
+    if (UNIX AND NOT APPLE)
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(LIBDRM REQUIRED libdrm)
+
+        list(APPEND MONITOR_INCLUDE_DIRS
+                ${LIBDRM_INCLUDE_DIRS}
+        )
+        list(APPEND MONITOR_LINK_LIBS
+                ${LIBDRM_LIBRARIES}
+        )
+    elseif (APPLE)
         list(APPEND MONITOR_LINK_LIBS
                 "-framework IOKit"
                 "-framework CoreFoundation"

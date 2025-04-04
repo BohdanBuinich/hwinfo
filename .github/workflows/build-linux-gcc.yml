@@ -13,6 +13,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install dependencies
+      run: sudo apt-get install -y libdrm-dev
+
     - name: Setup gcc
       uses: egor-tensin/setup-gcc@v1
 
